@@ -5,6 +5,10 @@ Ducky.registerCommand("thanks ducky", function(bot, message, msg) {
 	bot.sendMessage(message, "No problem!");
 });
 
+Ducky.registerCommand("best addon?", function(bot, message, msg) {
+	bot.sendMessage(message, "**Uhh is that even a question?** " + "https://www.skunity.com/Umbaska");
+});
+
 Ducky.registerCommand("what time is it?", function(bot, message, msg) {
 	var d = new Date();
 	var h = d.getHours();
