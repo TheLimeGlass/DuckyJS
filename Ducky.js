@@ -1,3 +1,4 @@
+
 var Discord = require("discord.js");
 var bot = new Discord.Client();
 var masters = "128194687801622528";
