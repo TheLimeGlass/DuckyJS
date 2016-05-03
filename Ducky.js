@@ -7,11 +7,16 @@ var myself = "171294847033016320";
 delete exports.triggers;
 delete exports.callbacks;
 delete exports.script2trigger;
+delete exports.mastercmd;
 delete exports.notifyusers;
+delete exports.messagelog;
+delete exports.helpmenu;
 exports.triggers = [];
 exports.callbacks = [];
 exports.script2trigger = [];
+exports.mastercmd = [];
 exports.notifyusers = [];
+exports.messagelog = [];
 
 
 exports.contains = function(base, input) {
@@ -49,21 +54,80 @@ function isMaster(master) {
 	}
 }
 
+function isMasterCMD(id, master) {
+	if(exports.mastercmd[id] == true) {
+		if(isMaster(master)) {
+			return true;
+		} else {
+			return false;
+		}
+	} else {
+		return true;
+	}
+}
+
 function stopMyself(id) {
 	if(id == myself) {
 		return true;
 	}
 }
 
+
 var currentCommandScript;
-exports.registerCommand = function(trigger, callback) {
-	exports.triggers.push(trigger);
-	exports.callbacks.push(callback);
-	exports.script2trigger.push(currentCommandScript);
+function registerCommand(trigger, callback, isMaster) {
+	if(contains(exports.triggers, trigger)) {
+		var key = -1;
+		for(var t in exports.triggers) {
+			if(exports.triggers[t] == trigger) {
+				key = t;
+				break;
+			}
+		}
+		if(key < 0) {
+			return;
+		}
+		// Is there any need to reset the trigger? Doesn't change
+		//exports.triggers[key] = trigger;
+		exports.callbacks[key] = callback;
+		// No point adding extra args for the command script. It's already set and won't/can't change
+		//exports.script2trigger[key] = currentCommandScript;
+		exports.mastercmd[key] = isMaster;
+	} else {
+		exports.triggers.push(trigger);
+		exports.callbacks.push(callback);
+		exports.script2trigger.push(currentCommandScript);
+		exports.mastercmd.push(isMaster);
+	}
 }
 
-exports.loadScript = function(path) {
+exports.registerCommand = function(trigger, callback, isMaster, aliases) {
+	isMaster = isMaster || false;
+	registerCommand(trigger, callback, isMaster);
+	if(aliases != null && aliases instanceof Array) {
+		for(var i in aliases) {
+			var alias = aliases[i];
+			registerCommand(alias, callback, isMaster);
+		}
+	}
+}
+
+
+
+exports.loadScript = function(path, reload) {
 	var def = require(path);
+	if(reload) {
+		var f = path.split("/");
+		var file = f[f.length - 1];
+		console.log('[info] Command script reloaded: ' + file);
+	}
+}
+
+function isInt(value) {
+  if (isNaN(value)) {
+    return false;
+  }
+  var x = parseFloat(value);
+  return (x | 0) === x;
 }
 
 /*exports.unloadScript = function(path, full) {
@@ -80,6 +144,14 @@ for (var i in files) {
   	console.log('[info] Command script loaded: ' + files[i]);
 }
 
+files = fs.readdirSync('./modules/');
+for (var i in files) {
+	currentCommandScript = files[i];
+  	//var definition = require('./commands/' + files[i]);
+  	exports.loadScript('./modules/' + files[i]);
+  	console.log('[info] Command script loaded: ' + files[i]);
+}
+
 fs.readFile('./data/notify.json', handleFile)
 
 // Write the callback function
@@ -92,6 +164,7 @@ function handleFile(err, data) {
 
 
 bot.on("message", function(message) {
+	exports.messagelog.push(message);
 	if(stopMyself(message.author.id)) {
 		return;
 	}
@@ -114,9 +187,13 @@ bot.on("message", function(message) {
 	for (var i in exports.triggers) {
 		var trigger = exports.triggers[i];
 		if(trigger == msg) {
-			var callback_function = exports.callbacks[i];
- 			callback_function(bot, message, msg);
- 			return;
+			if(isMasterCMD(i, message.author.id)) {
+				var callback_function = exports.callbacks[i];
+ 				callback_function(bot, message, msg);
+ 				return;
+			} else {
+				bot.sendMessage(message, "Sorry " + message.author + ", but that's a Master Command");
+			}
 		}
 	}
 	
@@ -155,18 +232,26 @@ bot.on("message", function(message) {
 				inMentions = true;
 				// Just going to push it straight up
 				nm.push(ts[t]);
+			} else if (ts[t] == "%integer%") {
+				if (isInt(ms[t])) {
+				    nm.push(ts[t]);
+				}
 			}
 		}
 		var newmsg = nm.join(" ");
 		if(trigger == newmsg) {
-			var callback_function = exports.callbacks[i];
- 			callback_function(bot, message, msg);
- 			return;
+			if(isMasterCMD(i, message.author.id)) {
+				var callback_function = exports.callbacks[i];
+ 				callback_function(bot, message, msg);
+ 				return;
+			} else {
+				bot.sendMessage(message, "Sorry " + message.author + ", but that's a Master Command");
+			}
  		}
 	}
 
 	return;
 });
 
-var auth = require("./data/auth.json");
+var auth = require("./auth.json");
 bot.login(auth.email, auth.password);
