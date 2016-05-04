@@ -1,7 +1,7 @@
 
 var Discord = require("discord.js");
 var bot = new Discord.Client();
-var masters = "128194687801622528";
+var masters = ["91356983042539520", "128194687801622528"];
 var myself = "171294847033016320";
 
 delete exports.triggers;
