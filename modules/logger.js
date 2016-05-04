@@ -55,7 +55,7 @@ Ducky.registerCommand("get log for last %arg% messages", function(bot, message, 
 					.encoding('utf-8')
 					.send({ "poster": "UmbaskaDets", "syntax": "text", "content": dataoutput })
 					.end(function (response) {
-						bot.sendMessage(message, "http://paste.ubuntu.com" + response.client['_httpMessage']['path']);
+						bot.sendMessage(message, "http://nfell2009.uk/ducky/logger?id=" + response.client['_httpMessage']['path']);
 				  	}
 				);
 			} else {
