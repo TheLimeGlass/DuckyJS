@@ -32,7 +32,7 @@ function contains(base, input) {
 	}
 	if(input instanceof Array) {
 		for(tocheck in input) {
-			if(base.indexOf(tocheck) > -1) {
+			if(base.indexOf(base[tocheck]) > -1) {
 				return true;
 			}
 		}
@@ -47,20 +47,12 @@ function contains(base, input) {
 }
 
 function isMaster(master) {
-	if(master == masters) {
-		return true;
-	} else {
-		return false;
-	}
+	return contains(masters, master)
 }
 
 function isMasterCMD(id, master) {
 	if(exports.mastercmd[id] == true) {
-		if(isMaster(master)) {
-			return true;
-		} else {
-			return false;
-		}
+		return isMaster(master);
 	} else {
 		return true;
 	}
