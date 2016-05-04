@@ -1,0 +1,10 @@
+#
+# install.ducky
+# Installer file for Ducky
+# reinstall from <url>
+# 
+# This document will only work with Ducky already installed
+# It's intended for an easy way to install Ducky without
+# FTP access.
+#
+/root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/coin.js
