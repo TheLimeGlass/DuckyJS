@@ -6,5 +6,36 @@
 # This document will only work with Ducky already installed
 # It's intended for an easy way to install Ducky without
 # FTP access.
-#
+
+# Main
+/root/ducky/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/Ducky.js
+# /root/ducky/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/auth.json
+# /root/ducky/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/install.ducky
+
+# Commands
+/root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/ascii.js
 /root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/coin.js
+/root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/core.js
+/root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/ducky_management.js
+/root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/misc.js
+/root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/omg.js
+/root/ducky/commands/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/commands/tools.js
+
+# Data
+# /root/ducky/data/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/data/imagedata.yml
+# /root/ducky/data/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/data/notify.json
+# /root/ducky/data/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/data/penis_lengths.json
+# /root/ducky/data/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/data/penis_lengths.yml
+
+# Data -> Images
+# No effort adding them. If they need changing use commands
+
+# Modules
+/root/ducky/modules/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/modules/filemanager.js
+/root/ducky/modules/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/modules/logger.js
+
+# Util
+/root/ducky/util/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/util/notify_writer.js
+# /root/ducky/util/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/util/penis_lengths.json
+/root/ducky/util/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/util/user.js
+
