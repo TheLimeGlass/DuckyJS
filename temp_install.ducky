@@ -5,4 +5,4 @@
 # parts of Ducky without modifying the main
 # install file (which took lots of work to make)
 
-/root/ducky/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/master/Ducky.js
+/root/ducky/ | https://raw.githubusercontent.com/TheDuckyProject/DuckyJS/blob/master/commands/shrug.js
