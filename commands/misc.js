@@ -65,7 +65,7 @@ Ducky.registerCommand("penis length of %mention%", function(bot, message, msg) {
 	    	var pout = penis.join("");
 			bot.sendMessage(message, "Penis length of " + message.mentions[0] + " is " + pout + " :open_mouth: ");
 		} else {
-			var full = ((Math.random() * 10) + 1);
+			var full = ((Math.random() * 15) + 1);
 	    	var penis = [];
 	    	penis.push("8")
 	    	for(var i = 0; i < full; i++) {
@@ -81,6 +81,22 @@ Ducky.registerCommand("penis length of %mention%", function(bot, message, msg) {
 		}
 	});
 }, false, ["dick length of %mention%"]);
+
+Ducky.registerCommand("remeasure my penis", function(bot, message, msg) {
+	var full = ((Math.random() * 15) + 1);
+	var penis = [];
+	penis.push("8")
+	for(var i = 0; i < full; i++) {
+		penis.push("=");
+	}
+	penis.push("D");
+	var pout = penis.join("");
+	bot.sendMessage(message, "Penis length of " + message.author + " is now " + pout + " :open_mouth: ");
+	data[message.author] = full;
+	yaml('/root/ducky/data/penis_lengths.yml', data, function(err) {
+  		if (err) console.log(err);
+	});
+}, false, ["remeasure my dick"])
 
 Ducky.registerCommand("monitor me", function(bot, message, msg) {
 	bot.sendMessage(message, "Sorry " + message.author + ", but this command is currently locked");
