@@ -96,7 +96,7 @@ Ducky.registerCommand("remeasure my penis", function(bot, message, msg) {
 	yaml('/root/ducky/data/penis_lengths.yml', data, function(err) {
   		if (err) console.log(err);
 	});
-}, false, ["remeasure my dick"])
+}, false, ["remeasure my dick"]);
 
 Ducky.registerCommand("monitor me", function(bot, message, msg) {
 	bot.sendMessage(message, "Sorry " + message.author + ", but this command is currently locked");
