@@ -18,10 +18,39 @@ function downloadFile(url, dest, cb, name) {
 	});
 }
 
-Ducky.registerCommand("reinstall from %arg%", function(bot, message, msg) {
+Ducky.registerCommand("forever restart ducky", function(bot, message, msg) {
+	if(Ducky.isMaster(message.author.id)) {
+		var sys = require('util')
+		var exec = require('child_process').exec;
+		var child;
+		child = exec("forever restartall", function (error, stdout, stderr) {
+			console.log('[info] ' + stdout);
+			if (error !== null) {
+				console.log('exec error: ' + error);
+			}
+		});
+		bot.sendMessage(message, "Restarted!");
+	} else {
+		bot.sendMessage(message, "You're not my master...");
+	}
+}, true);
+
+Ducky.registerCommand("how is (the|thegreat|thy) ducky", function(bot, message, msg) {
+	bot.sendMessage(message, "I'm great thanks, " + message.author + "! How are you? \n_I really couldn't care how you are. I'm not programmed to know_")
+}, true);
+
+Ducky.registerCommand("how are you [ducky dear]", function(bot, message, msg) {
+	bot.sendMessage(message, "I'm great thanks, " + message.author + "! How are you? \n_I really couldn't care how you are. I'm not programmed to know_")
+});
+
+Ducky.registerCommand("reinstall from %arg% named %arg%", function(bot, message, msg) {
 	if(Ducky.isMaster(message.author.id)) {
 		var url = message.content.split(" ")[2];
-		//var name = message.content.split(" ")[4];
+		if(message.content.split.length > 3) {
+			var name = message.content.split(" ")[4];
+		} else {
+			var name;
+		}
 		bot.sendMessage(message, "Reinstalling from `" + url + "`");
 		var file;
 		downloadFile(url, "/root/ducky/data/", function(data, err) {
@@ -76,3 +105,4 @@ Ducky.registerCommand("reinstall from %arg%", function(bot, message, msg) {
 		bot.sendMessage(message, "You're not my master...");
 	}
 }, true);
+

@@ -1,7 +1,7 @@
 
 var Discord = require("discord.js");
 var bot = new Discord.Client();
-var masters = "128194687801622528";
+var masters = ["91356983042539520", "128194687801622528"];
 var myself = "171294847033016320";
 
 delete exports.triggers;
@@ -32,7 +32,7 @@ function contains(base, input) {
 	}
 	if(input instanceof Array) {
 		for(tocheck in input) {
-			if(base.indexOf(tocheck) > -1) {
+			if(base.indexOf(base[tocheck]) > -1) {
 				return true;
 			}
 		}
@@ -47,20 +47,12 @@ function contains(base, input) {
 }
 
 function isMaster(master) {
-	if(master == masters) {
-		return true;
-	} else {
-		return false;
-	}
+	return contains(masters, master)
 }
 
 function isMasterCMD(id, master) {
 	if(exports.mastercmd[id] == true) {
-		if(isMaster(master)) {
-			return true;
-		} else {
-			return false;
-		}
+		return isMaster(master);
 	} else {
 		return true;
 	}
@@ -196,16 +188,26 @@ bot.on("message", function(message) {
 			}
 		}
 	}
-	
+	main_loop:
 	for (var i in exports.triggers) {
 		var trigger = exports.triggers[i];
-
+		var args = [];
 		var ts = trigger.split(" ");
 		var ms = msg.split(" ");
+		for (var msk in ms) {
+			if(ms[msk] == "" || ms[msk] == " ") {
+				ms.splice(msk, 1);
+			}
+		}
 		var inMentions = false;
+		var inOptional = false;
+		var skipUntil = false;
 		var nm = [];
 		for (var t in ts) {
-			if(ts[t] == ms[t]) {
+
+			if (skipUntil != false) {
+				skipUntil = skipUntil - 1;
+			} else if(ts[t] == ms[t]) {
 				if(inMentions) {
 					/*if(!message.mentions.indexOf(ms[t]) > 0) {
 						nm.push(ts[t]);
@@ -214,10 +216,26 @@ bot.on("message", function(message) {
 				} else {
 					nm.push(ts[t]);
 				}
+			} else if (inOptional) {
+				if(ts[t].endsWith("]")) {
+					/*var nosquare = ts[t].replace("]", "");
+					nm.push("]");*/
+					nm.push(ts[t]);
+					inOptional = false;
+				} else {
+					nm.push(ts[t]);
+				}
 			} else if (ts[t] == "%arg%") {
 				nm.push(ts[t]);
+				args.push(ms[t]);
 			} else if (ts[t] == "%args%") {
 				nm.push(ts[t]);
+				if(ms.length > t) {
+					for(var msss in ms) {
+						args.push(ms[t++]);
+					}
+				}
+				args.push(ms[t]);
 				break;
 			} else if (ts[t] == "%mention%") {
 				/*if(message.mentions.indexOf(ms[t]) > 0) {
@@ -225,6 +243,7 @@ bot.on("message", function(message) {
 				}*/
 				// Just going to push it straight up
 				nm.push(ts[t]);
+				args.push(ms[t]);
 			} else if (ts[t] == "%mentions%") {
 				/*if(message.mentions.indexOf(ms[t]) > 0) {
 					nm.push(ts[t]);
@@ -232,9 +251,100 @@ bot.on("message", function(message) {
 				inMentions = true;
 				// Just going to push it straight up
 				nm.push(ts[t]);
+				args.push(ms[t]);
 			} else if (ts[t] == "%integer%") {
 				if (isInt(ms[t])) {
 				    nm.push(ts[t]);
+				    args.push(ms[t]);
+				}
+			} else if (ts[t].startsWith("[")) {
+				// hello [ducky dear]
+				if(ts[t].endsWith("]")) {
+					/*var nosquare = ts[t].replace("[", "");
+					var nosquare = ts[t].replace("]", "");
+					nm.push(nosquare);*/
+					nm.push(ts[t]);
+				} else {
+					/*var nosquare = ts[t].replace("[", "");
+					nm.push(nosquare);*/
+					nm.push(ts[t]);
+					inOptional = true;
+				}
+			} else if (ts[t].endsWith("]")) {
+				inOptional = false;
+				nm.push(ts[t]);
+				/*var nosquare = ts[t].replace("]", "");
+				nm.push(nosquare);*/
+			} else if (ts[t].startsWith("(")) {
+				var nobracket = ts[t].replace("(", "");
+				if(ts[t].endsWith(")")) {
+					nobracket = ts[t].replace(")", "");
+					if(contains(ts[t], "|")) {
+						var pipesplit = ts[t].split("|");
+						for (var pslit in pipesplit) {
+							console.log(ms[t] + " -> " + pipesplit[pslit])
+							if(ms[t] == pipesplit[pslit]) {
+								nm.push(ts[t]);
+								args.push(pipesplit[pslit]);
+								break;
+							}
+						}
+					} else if (ms[t] == nobracket) {
+						nm.push(ts[t]);
+					}
+				} else {
+					// hello (ducky|my dear)
+					// hello
+					// * (ducky|my
+					// dear)
+
+					// * ducky|my
+					if(contains(nobracket, "|")) {
+						var fnb = nobracket.split("|");
+						// ducky
+						// my
+						var poss = fnb[0];
+						if(ms[t] == poss) {
+							nm.push(ts[t]);
+							continue;
+						}
+					} else {
+						nm.push(ts[t]);
+					}
+					var fsplit = [];
+					var fcccc = 0;
+					for (var fslit in ts) {
+						var fccc = fcccc + t;
+						if(fccc > ts.length || !ts[fccc]) {
+							return;
+						}
+						var fc = fccc;
+						if(ts[fc].endsWith(")")) {
+							fsplit.push(ts[fc]);
+							break;
+						} else {
+							fsplit.push(ts[fc]);
+						}
+					}
+					if(fsplit.length == 0) {
+						var fspi = fsplit.join(" ");
+						var ufspi = fspi;
+						// (ducky|my dear|duck)
+						fspi = fspi.replace("(", "");
+						fspi = fspi.replace(")", "");
+						var fspiltt = fspi.split("|");
+						var someMatch = false;
+						for(var fspillt in fspiltt) {
+							if(fspiltt[fspillt] == ms[t]) {
+								someMatch = true;
+							}
+						}
+						if(someMatch == true) {
+							nm.push(ufspi);
+						}
+					} else {
+						return;
+					}
 				}
 			}
 		}
@@ -242,7 +352,7 @@ bot.on("message", function(message) {
 		if(trigger == newmsg) {
 			if(isMasterCMD(i, message.author.id)) {
 				var callback_function = exports.callbacks[i];
- 				callback_function(bot, message, msg);
+ 				callback_function(bot, message, msg, args);
  				return;
 			} else {
 				bot.sendMessage(message, "Sorry " + message.author + ", but that's a Master Command");

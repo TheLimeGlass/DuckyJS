@@ -17,6 +17,11 @@ Ducky.registerCommand("what time is it?", function(bot, message, msg) {
 	bot.sendMessage(message, "It's currently: " + h + ":" + m + ":" + s + " (BST)");
 });
 
+Ducky.registerCommand("sia dory", function(bot, message, msg) {
+	var filemanager = require('../modules/filemanager.js');
+	filemanager.sendImage("sia dory", bot, message);
+});
+
 Ducky.registerCommand("whats a duck look like?", function(bot, message, msg) {
 	var filemanager = require('../modules/filemanager.js');
 	filemanager.sendImage("duck", bot, message);
@@ -65,7 +70,7 @@ Ducky.registerCommand("penis length of %mention%", function(bot, message, msg) {
 	    	var pout = penis.join("");
 			bot.sendMessage(message, "Penis length of " + message.mentions[0] + " is " + pout + " :open_mouth: ");
 		} else {
-			var full = ((Math.random() * 10) + 1);
+			var full = ((Math.random() * 15) + 1);
 	    	var penis = [];
 	    	penis.push("8")
 	    	for(var i = 0; i < full; i++) {
@@ -81,6 +86,32 @@ Ducky.registerCommand("penis length of %mention%", function(bot, message, msg) {
 		}
 	});
 }, false, ["dick length of %mention%"]);
+
+Ducky.registerCommand("remeasure my penis", function(bot, message, msg) {
+	var readYaml = require('read-yaml');
+	var yaml = require('write-yaml');
+	readYaml('/root/ducky/data/penis_lengths.yml', function(err, data) {
+		var full = ((Math.random() * 15) + 1);
+		var penis = [];
+		penis.push("8")
+		for(var i = 0; i < full; i++) {
+			penis.push("=");
+		}
+		penis.push("D");
+		var pout = penis.join("");
+		bot.sendMessage(message, "Penis length of " + message.author + " is now " + pout + " :open_mouth: ");
+		data[message.author] = full;
+		yaml('/root/ducky/data/penis_lengths.yml', data, function(err) {
+	  		if (err) console.log(err);
+		});
+	});
+
+	
+}, false, ["remeasure my dick"]);
+
+Ducky.registerCommand("testing args %integer% %mention% %args%", function(bot, message, msg, args) {
+	bot.reply(message, args.join("\n"));
+});
 
 Ducky.registerCommand("monitor me", function(bot, message, msg) {
 	bot.sendMessage(message, "Sorry " + message.author + ", but this command is currently locked");
@@ -137,6 +168,10 @@ Ducky.registerCommand("add %integer% to %integer%", function(bot, message, msg) 
 Ducky.registerCommand("do maths %args%", function(bot, message, msg) {
 	if(message.content == "do maths me + you") {
 		bot.sendMessage(message, "Answer: I love you, " + message.author);
+		return;
+	} else if(message.content == "do maths sia + dory" || message.content == "do maths dory + sia") {
+		var filemanager = require('../modules/filemanager.js');
+		filemanager.sendImage("sia dory", bot, message);
 		return;
 	}
 	var ms = message.content.split(" ");
