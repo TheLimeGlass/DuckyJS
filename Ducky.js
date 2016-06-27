@@ -1,17 +1,27 @@
 
 var Discord = require("discord.js");
 var bot = new Discord.Client();
-var masters = "128194687801622528";
+var masters = ["91356983042539520", "128194687801622528"];
+var baemasters = ["128194687801622528"];
 var myself = "171294847033016320";
 
-delete exports.triggers;
-delete exports.callbacks;
-delete exports.script2trigger;
-delete exports.notifyusers;
+// 0 = running
+// 1 = updating
+// 2 = maintance
+// 3 = fatal error
+exports.modes = ["running", "updating", "maintance", "fatal error"];
+exports.mode = 0;
+
+exports.picturebae = [];
+exports.picturebae.push("155112606661607425");
+exports.autokick = ["100382580146196480", "138441986314207232"];
 exports.triggers = [];
 exports.callbacks = [];
 exports.script2trigger = [];
+exports.mastercmd = [];
 exports.notifyusers = [];
+exports.messagelog = [];
+exports.includes = [];
 
 
 exports.contains = function(base, input) {
@@ -21,13 +31,17 @@ exports.isMaster = function(master) {
 	return isMaster(master);
 }
 
+exports.isBaeMaster = function(master){
+	return isMaster(master, true);
+}
+
 function contains(base, input) {
 	if(base == null || input == null) {
 		return false;
 	}
 	if(input instanceof Array) {
 		for(tocheck in input) {
-			if(base.indexOf(tocheck) > -1) {
+			if(base.indexOf(base[tocheck]) > -1) {
 				return true;
 			}
 		}
@@ -41,11 +55,18 @@ function contains(base, input) {
 	}
 }
 
-function isMaster(master) {
-	if(master == masters) {
-		return true;
+function isMaster(master, baemaster) {
+	if(baemaster) {
+		return contains(baemasters, master);
+	}
+	return contains(masters, master)
+}
+
+function isMasterCMD(id, master) {
+	if(exports.mastercmd[id] == true) {
+		return isMaster(master);
 	} else {
-		return false;
+		return true;
 	}
 }
 
@@ -55,34 +76,87 @@ function stopMyself(id) {
 	}
 }
 
+
 var currentCommandScript;
-exports.registerCommand = function(trigger, callback) {
-	exports.triggers.push(trigger);
-	exports.callbacks.push(callback);
-	exports.script2trigger.push(currentCommandScript);
+function registerCommand(trigger, callback, isMaster, includes) {
+	if(contains(exports.triggers, trigger)) {
+		var key = -1;
+		for(var t in exports.triggers) {
+			if(exports.triggers[t] == trigger) {
+				key = t;
+				break;
+			}
+		}
+		if(key < 0) {
+			return;
+		}
+		exports.callbacks[key] = callback;
+		exports.mastercmd[key] = isMaster;
+		exports.includes.push(includes);
+	} else {
+		exports.triggers.push(trigger);
+		exports.callbacks.push(callback);
+		exports.script2trigger.push(currentCommandScript);
+		exports.mastercmd.push(isMaster);
+		exports.includes.push(includes);
+	}
 }
 
-exports.loadScript = function(path) {
+exports.registerCommand = function(trigger, callback, isMaster, aliases, includes) {
+	isMaster = isMaster || false;
+	includes = includes || false;
+	if(trigger instanceof Array) {
+		for(var t in trigger) {
+			var trig = trigger[t];
+			registerCommand(trig, callback, isMaster, includes)
+		}
+	} else {
+		registerCommand(trigger, callback, isMaster);
+	}
+	if(aliases != null && aliases instanceof Array) {
+		for(var i in aliases) {
+			var alias = aliases[i];
+			registerCommand(alias, callback, isMaster, includes);
+		}
+	}
+}
+
+
+
+exports.loadScript = function(path, reload) {
 	var def = require(path);
+	if(reload) {
+		var f = path.split("/");
+		var file = f[f.length - 1];
+		console.log('[info] Command script reloaded: ' + file);
+	}
 }
 
-/*exports.unloadScript = function(path, full) {
-	delete require.cache[path];
-}*/
+function isInt(value) {
+  if (isNaN(value)) {
+    return false;
+  }
+  var x = parseFloat(value);
+  return (x | 0) === x;
+}
 
-//var commands = require("./loader/commands.js");
 var fs = require('fs');
 var files = fs.readdirSync('./commands/');
 for (var i in files) {
 	currentCommandScript = files[i];
-  	//var definition = require('./commands/' + files[i]);
   	exports.loadScript('./commands/' + files[i]);
+  	console.log('[info] Command script loaded: ' + files[i]);
+}
+
+files = fs.readdirSync('./modules/');
+for (var i in files) {
+	currentCommandScript = files[i];
+  	exports.loadScript('./modules/' + files[i]);
   	console.log('[info] Command script loaded: ' + files[i]);
 }
 
 fs.readFile('./data/notify.json', handleFile)
 
-// Write the callback function
 function handleFile(err, data) {
     if (err) throw err
     obj = JSON.parse(data)
@@ -91,82 +165,173 @@ function handleFile(err, data) {
 }
 
 
+function autoKickUser(server, user) {
+	if(contains(exports.autokick, user.id)) {
+		bot.sendMessage(user, "Sorry, " + user + ", but you're not allow into " + server.name);
+		setTimeout(function() { bot.kickMember(server, user); }, 1000);
+	}
+}
+
+bot.on("serverNewMember", function(server, user) {
+	if(server.id == "135877399391764480") {
+		autoKickUser(server, user);
+	}
+});
+
+bot.on("ready", function() {
+	if(exports.mode == 0) {
+		bot.setStatus("online", "in the pond");
+	} else if(exports.mode == 1) {
+		bot.setStatus("away", "updating...");
+	} else if(exports.mode == 2) {
+		bot.setStatus("away", "maintance mode...");
+	} else if(exports.mode == 3) {
+		bot.setStatus("away", "fatal error!");
+	}
+});
+
+function notOnline(message) {
+	if(exports.mode == 1 || exports.mode == 2 || exports.mode == 3) {
+		var msg;
+		if(exports.mode == 1) {
+			msg = "Sorry, " + message.author + "; I'm currently being upgraded! I'll be back shortly with new awesome features!";
+		} else if (exports.mode == 2) {
+			msg = "Sorry, " + message.author + "; I'm currently under maintance! Some changes are being made to fix me up!"
+		} else if (exports.mode == 3) {
+			msg = "Oopsy! A fatal error has occoured somewhere! To keep my data safe, I'm no longer running any commands and have entered a lock state.";
+		}
+		if(message.channel instanceof Discord.PMChannel) {
+			bot.sendMessage(message, msg);
+		} else if (contains(message.mentions, bot.user)) {
+			bot.sendMessage(message, msg);
+		}
+	}
+	if(isMaster(message.author.id)) {
+		if(exports.mode != 3) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function processMentions(users, user) {
+	for(var u in users) {
+		var id = "<@" + users[u].id + ">";
+		if(id == user) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bot.on("message", function(message) {
+	exports.messagelog.push(message);
 	if(stopMyself(message.author.id)) {
 		return;
 	}
-	/*if(!isMaster(message.author.id)) {
+	if(notOnline(message)) {
 		return;
-	}*/
-	// TODO: Notify logger (need to figure out how to not spam users...)
-	/*if(message.mentions.length > 0) {
-		for(var i = 0; i < message.mentions.length; i++) {
-			for(var ii = 0; ii < exports.notifyusers.length; ii++) {
-				if(message.mentions[i].id == exports.notifyusers[ii]) {
-					bot.sendMessage(message.mentions[i], message.content);
-					return;
-				}
-			}
-		}
-	}*/
+	}
+	
 	var msg = message.content.toLowerCase();
-
 	for (var i in exports.triggers) {
 		var trigger = exports.triggers[i];
 		if(trigger == msg) {
-			var callback_function = exports.callbacks[i];
- 			callback_function(bot, message, msg);
- 			return;
-		}
-	}
-	
-	for (var i in exports.triggers) {
-		var trigger = exports.triggers[i];
-
-		var ts = trigger.split(" ");
-		var ms = msg.split(" ");
-		var inMentions = false;
-		var nm = [];
-		for (var t in ts) {
-			if(ts[t] == ms[t]) {
-				if(inMentions) {
-					/*if(!message.mentions.indexOf(ms[t]) > 0) {
-						nm.push(ts[t]);
-					}*/
-					continue;
-				} else {
-					nm.push(ts[t]);
-				}
-			} else if (ts[t] == "%arg%") {
-				nm.push(ts[t]);
-			} else if (ts[t] == "%args%") {
-				nm.push(ts[t]);
-				break;
-			} else if (ts[t] == "%mention%") {
-				/*if(message.mentions.indexOf(ms[t]) > 0) {
-					nm.push(ts[t]);
-				}*/
-				// Just going to push it straight up
-				nm.push(ts[t]);
-			} else if (ts[t] == "%mentions%") {
-				/*if(message.mentions.indexOf(ms[t]) > 0) {
-					nm.push(ts[t]);
-				}*/
-				inMentions = true;
-				// Just going to push it straight up
-				nm.push(ts[t]);
+			if(isMasterCMD(i, message.author.id)) {
+				var callback_function = exports.callbacks[i];
+ 				callback_function(bot, message, msg);
+ 				return;
+			} else {
+				bot.sendMessage(message, "Sorry " + message.author + ", but that's a Master Command");
 			}
 		}
-		var newmsg = nm.join(" ");
-		if(trigger == newmsg) {
-			var callback_function = exports.callbacks[i];
- 			callback_function(bot, message, msg);
- 			return;
- 		}
 	}
 
+	var msg 	= message.content.toLowerCase();
+	var mst 	= msg.split(" ");
+	var ms 		= [];
+	for(var m in mst) {
+		if(mst[m] == "" || mst[m] == " ") {
+			continue;
+		}
+		ms.push(mst[m]);
+	}
+	if(!ms || ms.length == 0) {
+		return;
+	}
+	for(var tr in exports.triggers) {
+		var trigger    = exports.triggers[tr];
+		var ts     	   = trigger.split(" ");
+
+		var cmd    	   = [];
+		var args   	   = [];
+
+		var inArgs 	   = false;	
+		var inMentions = false;
+
+		for(var t in ts) {
+			if(inArgs == true) {
+				args.push(ms[t]);
+			} else if(inMentions == true) {
+				if(message.isMentioned(ms[t])) {
+					args.push(ms[t]);
+					continue;
+				} else {
+					inMentions = false;
+				}
+			}
+			if(ts[t] == ms[t]) {
+				cmd.push(ts[t]);
+			} else if(ts[t] == "%arg%") {
+				cmd.push(ts[t]);
+				args.push(ms[t]);
+			} else if(ts[t] == "%args%") {
+				cmd.push(ts[t]);
+				args.push(ms[t]);
+				inArgs = true;
+			} else if(ts[t] == "%mention%") {
+				if(processMentions(message.mentions, ms[t])) {
+					cmd.push(ts[t]);
+					args.push(ms[t]);
+				}
+			} else if(ts[t] == "%mentions%") {
+				inMentions = true;
+				if(processMentions(message.mentions, ms[t])) {
+					cmd.push(ts[t]);
+					args.push(ms[t]);
+				}
+			} else if(ts[t] == "%integer%" || ts[t] == "%int%") {
+				if(isInt(ms[t])) {
+					cmd.push(ts[t]);
+					args.push(ms[t]);
+				} else {
+					cmd.push(ts[t]);
+				}
+			} else if(ts[t].startsWith("[")) {
+				if(ts[t].endsWith("]")) {
+					var swb = ts[t];
+					swb = swb.replace("[" , "");
+					swb = swb.replace("]" , "");
+
+					if(swb == ms[t]) {
+						cmd.push(ts[t]);
+					}
+				}
+			}
+		}
+		var command = cmd.join(" ");
+		if(trigger == command) {
+			if(isMasterCMD(tr, message.author.id)) {
+				var callback_function = exports.callbacks[tr];
+ 				callback_function(bot, message, msg, args);
+ 				return;
+			} else {
+				bot.sendMessage(message, "Sorry " + message.author + ", but that's a Master Command");
+			}
+ 		}
+	}
 	return;
 });
 
-var auth = require("./data/auth.json");
+var auth = require("./auth.json");
 bot.login(auth.email, auth.password);

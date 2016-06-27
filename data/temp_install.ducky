@@ -1,0 +1,8 @@
+#
+# Unlike install.ducky, this file is intended for
+# being re-written multiple times. This file
+# can be used as a reliable way to re-install
+# parts of Ducky without modifying the main
+# install file (which took lots of work to make)
+
+/root/ducky/commands/shrug.js | http://pastebin.com/raw/WK6SSB7i

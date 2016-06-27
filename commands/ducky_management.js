@@ -20,6 +20,42 @@ Ducky.registerCommand("join server %arg%", function(bot, message, msg) {
 	}
 });
 
+Ducky.registerCommand("download image from %arg% named %args%", function(bot, message, msg) {
+	if(Ducky.isMaster(message.author.id)) {
+		var filemanager = require('../modules/filemanager.js');
+		var ms = message.content.split(" ");
+		var arg = ms[3];
+		if(ms.length == 5) {
+			var name = ms[5];
+		} else if (ms.length > 5) {
+			var na = [];
+			for(var i = 5; i < ms.length; i++) {
+				na.push(ms[i]);
+			}
+			var name = na.join(" ");
+		}
+		filemanager.saveImage(arg, name, bot, message);
+	} else {
+		bot.sendMessage(message, "You're not my master...");
+	}
+});
+
+Ducky.registerCommand("share %args%", function(bot, message, msg) {
+	var filemanager = require('../modules/filemanager.js');
+	var ms = message.content.split(" ");
+	if(ms.length == 1) {
+		var name = ms[1];
+	} else if (ms.length > 1) {
+		var na = [];
+		for(var i = 1; i < ms.length; i++) {
+			na.push(ms[i]);
+		}
+		var name = na.join(" ");
+	}
+	filemanager.sendImage(name, bot, message);
+	bot.deleteMessage(message);
+});
+
 Ducky.registerCommand("leave server", function(bot, message, msg) {
 	if(Ducky.isMaster(message.author.id)) {
 		bot.sendMessage(message, "Goodbye guys :(" +
@@ -59,7 +95,7 @@ Ducky.registerCommand("find command %args%", function(bot, message, msg) {
 		}
 	}
 //	bot.sendMessage(message, command);
-});
+}, false, ["/find %args%", "/find command %args%"]);
 
 Ducky.registerCommand("about you", function(bot, message, msg) {
 	var duckyinfo = [];
@@ -76,6 +112,7 @@ Ducky.registerCommand("about you", function(bot, message, msg) {
 	//duckyinfo.push("Uptime: " + duckydate.getDay() + " days, " + duckydate.getHours() + " hours, " + duckydate.getMinutes() + " minutes and " + duckydate.getSeconds() + " seconds");
 	duckyinfo.push("Uptime: " + diffDays);
 	duckyinfo.push("ID: " + bot.user.id);
+	duckyinfo.push("Github: http://github.com/TheDuckyProject/DuckyJS");
 	var duckyout = duckyinfo.join("\n");
 	bot.sendMessage(message, duckyout);
 });
@@ -104,19 +141,27 @@ Ducky.registerCommand("about you", function(bot, message, msg) {
 	}
 
 });
+*/
 
 Ducky.registerCommand("/load %args%", function(bot, message, msg){
 	if(Ducky.isMaster(message.author.id)) {
-		var script = message.content.replace("/load ", "");
+		var ms = message.content.split(" ");
+		if(ms.length == 2) {
+			var script = ms[1];
+		} else {
+			var sc = [];
+			for(var i = 1; i < ms.length; i++) {
+				sc.push(ms[i]);
+			}
+			var script = sc.join(" ");
+		}
 		script = script.replace(".js", "");
 		try {
-			Ducky.loadScript('./commands/' + script + ".js");
-			bot.sendMessage(message, "Successfully loaded command unit: " + script);
+			Ducky.loadScript('./commands/' + script + ".js", true);
+			bot.sendMessage(message, "Successfully loaded command unit: " + script + ".js");
 		} catch (err) {
-			bot.sendMessage(message, "Failed to load command unit: " + script);
+			bot.sendMessage(message, "Failed to load command unit: " + script + ".js");
 			console.log(err.stack)
 		}
 	}
-});
-
-*/
+}, false, ["reload %args%"]);
